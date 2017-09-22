@@ -1,4 +1,4 @@
-package io.downgoon;
+package io.downgoon.mydk;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

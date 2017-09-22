@@ -1,4 +1,4 @@
-package xyz.downgoon;
+package xyz.downgoon.mydk;
 
 /**
  * Hello world!

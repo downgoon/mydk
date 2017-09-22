@@ -1,4 +1,4 @@
-package xyz.downgoon.concurrent;
+package xyz.downgoon.mydk.concurrent;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -7,6 +7,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import xyz.downgoon.mydk.concurrent.ConcurrentResourceContainer;
+import xyz.downgoon.mydk.concurrent.ResourceLifecycle;
 
 public class ConcurrentResourceContainerTest {
 

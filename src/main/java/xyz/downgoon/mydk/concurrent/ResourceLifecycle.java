@@ -1,4 +1,4 @@
-package xyz.downgoon.concurrent;
+package xyz.downgoon.mydk.concurrent;
 
 public interface ResourceLifecycle<T> {
 

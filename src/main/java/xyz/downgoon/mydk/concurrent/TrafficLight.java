@@ -1,4 +1,4 @@
-package xyz.downgoon.concurrent;
+package xyz.downgoon.mydk.concurrent;
 
 /**
  * red/green light: thread will be blocked when red light is on until the light
