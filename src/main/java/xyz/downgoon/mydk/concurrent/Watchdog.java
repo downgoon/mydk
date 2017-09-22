@@ -66,7 +66,6 @@ public class Watchdog {
 						}
 
 					} catch (InterruptedException e) {
-						e.printStackTrace();
 						/*
 						 * callback jobInterrupttedHandler only interrupted in
 						 * job doing status

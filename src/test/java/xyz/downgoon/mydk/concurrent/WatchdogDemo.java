@@ -82,10 +82,13 @@ public class WatchdogDemo {
 			System.out.println(watchdog.toString());
 		}).start();
 
-		httpLogger.close();
+		// clean resources
 		if (watchdog.isAlive()) {
 			watchdog.stop();
 		}
+
+		httpLogger.closeAndDelete();
+		httpServer.stop();
 
 	}
 
