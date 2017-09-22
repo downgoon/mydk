@@ -4,7 +4,7 @@
 
 	<groupId>xyz.downgoon</groupId>
 	<artifactId>mydk</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>jar</packaging>
 
 	<description>a template for java maven project</description>
