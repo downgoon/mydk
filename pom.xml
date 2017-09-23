@@ -7,7 +7,8 @@
 	<version>0.1.0</version>
 	<packaging>jar</packaging>
 
-	<description>a template for java maven project</description>
+	<name>mydk</name>
+	<description>a java Development Kit</description>
 	<url>http://github.com/downgoon/mydk</url>
 	<licenses>
 		<license>
