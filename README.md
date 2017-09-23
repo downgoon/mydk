@@ -27,8 +27,8 @@ the lastest release version can be found here [g:"xyz.downgoon" a:"mydk"](http:/
 
 ### concurrent
 
-- [ConcurrentResourceContainer](src/test/java/xyz/downgoon/concurrent/ConcurrentResourceContainerTest.java)
-- [TrafficLight.java](src/test/java/xyz/downgoon/concurrent/TrafficLightTest.java)
+- [ConcurrentResourceContainer](src/test/java/xyz/downgoon/mydk/concurrent/ConcurrentResourceContainerTest.java)
+- [TrafficLight.java](src/test/java/xyz/downgoon/mydk/concurrent/TrafficLightTest.java)
 - [Watchdog](src/test/java/xyz/downgoon/mydk/concurrent/WatchdogDemo.java)
 
 ### testing
