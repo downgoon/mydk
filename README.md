@@ -41,3 +41,23 @@ the lastest release version can be found here [g:"xyz.downgoon" a:"mydk"](http:/
 ### util
 
 - [AntPathMatcher.java](src/test/java/xyz/downgoon/mydk/util/AntPathMatcher.java)
+
+---
+
+## for Developers
+
+- how to build
+
+[fork me](https://github.com/downgoon/mydk#fork-destination-box) firstly, then
+
+``` bash
+git clone https://$YOUR_GITHUB_NAME@github.com/$YOUR_GITHUB_NAME/mydk.git
+git remote add upstream https://github.com/downgoon/mydk.git
+mvn clean package
+```
+
+- how to deploy
+
+``` bash
+mvn deploy
+```
