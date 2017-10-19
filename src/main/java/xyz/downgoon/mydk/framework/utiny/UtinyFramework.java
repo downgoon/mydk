@@ -24,7 +24,7 @@ public class UtinyFramework implements CommandFramework {
 	/**
 	 * order matters
 	 */
-	protected Map<String, UtinyHandlerStack> pathMapping = new LinkedHashMap<>();
+	protected Map<String, UtinyHandlerStack> locationHandlerMapping = new LinkedHashMap<>();
 
 	@Override
 	public void exec(Command command) {
@@ -34,25 +34,25 @@ public class UtinyFramework implements CommandFramework {
 		boolean handlerMatched = false;
 		UtinyFilterChain filtersMerged = null; // until meet handler
 		
-		for (Map.Entry<String, UtinyHandlerStack> e :  pathMapping.entrySet()) {
-			String pathPattern = e.getKey();
-			UtinyHandlerStack handlerStack = e.getValue();
+		for (Map.Entry<String, UtinyHandlerStack> e :  locationHandlerMapping.entrySet()) {
+			String locationPattern = e.getKey();
+			UtinyHandlerStack locationStack = e.getValue();
 			
-			if (!handlerMatched && doMatch(pathPattern, command.path())) {
+			if (!handlerMatched && doMatch(locationPattern, command.path())) {
 
-				if (handlerStack.getHandler() != null) {
+				if (locationStack.getHandler() != null) {
 					handlerMatched = true;
 					if (filtersMerged == null) {
-						doStack(command, handlerStack);
+						doStack(command, locationStack);
 					} else {
-						doStack(command, new UtinyHandlerStack(filtersMerged, handlerStack.getHandler()));
+						doStack(command, new UtinyHandlerStack(filtersMerged, locationStack.getHandler()));
 					}
 
 				} else {
 					if (filtersMerged == null) {
 						filtersMerged = new UtinyFilterChain();
 					}
-					filtersMerged.appendFilterChain((UtinyFilterChain) handlerStack.getFilterChain());
+					filtersMerged.appendFilterChain((UtinyFilterChain) locationStack.getFilterChain());
 				}
 
 			}
@@ -106,7 +106,7 @@ public class UtinyFramework implements CommandFramework {
 	}
 
 	@Override
-	public CommandFramework path(String path, CommandHandler handler, CommandFilter... filters) {
+	public CommandFramework location(String location, CommandHandler handler, CommandFilter... filters) {
 		UtinyFilterChain filterChain = null;
 		if (filters != null && filters.length > 0) {
 			filterChain = new UtinyFilterChain();
@@ -114,7 +114,7 @@ public class UtinyFramework implements CommandFramework {
 				filterChain.appendFilter(filter);
 			}
 		}
-		pathMapping.put(path, new UtinyHandlerStack(filterChain, handler));
+		locationHandlerMapping.put(location, new UtinyHandlerStack(filterChain, handler));
 		return this;
 	}
 

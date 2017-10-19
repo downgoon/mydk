@@ -4,6 +4,6 @@ public interface CommandFramework {
 
 	public void exec(Command command);
 	
-	public CommandFramework path(String path, CommandHandler handler, CommandFilter ... filters);
+	public CommandFramework location(String location, CommandHandler handler, CommandFilter ... filters);
 	
 }

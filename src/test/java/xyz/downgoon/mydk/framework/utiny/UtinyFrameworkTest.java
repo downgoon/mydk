@@ -169,9 +169,9 @@ public class UtinyFrameworkTest extends UtinyFilterChainTest {
 			notFoundCalled.set(true);
 		});
 		
-		framework.path("/**", null, logFilter);
-		framework.path("/fastapi/**", null, timerFilter);
-		framework.path("/fastapi/echo", echoHandler);
+		framework.location("/**", null, logFilter);
+		framework.location("/fastapi/**", null, timerFilter);
+		framework.location("/fastapi/echo", echoHandler);
 		
 		UtinyCommand command = new UtinyCommand("/fastapi/echo");
 		

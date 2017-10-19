@@ -19,9 +19,9 @@ public class UtinyFrameworkExample {
 		NamedTraceStopableFilter timerFilter = new NamedTraceStopableFilter("timerFilter", false, tracer);
 
 		// path matching
-		framework.path("/**", null, logFilter);
-		framework.path("/fastapi/**", null, timerFilter);
-		framework.path("/fastapi/echo", new EchoHandler(tracer));
+		framework.location("/**", null, logFilter);
+		framework.location("/fastapi/**", null, timerFilter);
+		framework.location("/fastapi/echo", new EchoHandler(tracer));
 		
 		
 		// handle command
