@@ -38,6 +38,8 @@ public class ConcurrentResourceContainerTest {
 
 	}
 
+	volatile ConnectionResource[] cr = new ConnectionResource[3];
+
 	@Test
 	public void testBuild() throws Exception {
 
@@ -45,26 +47,26 @@ public class ConcurrentResourceContainerTest {
 
 		final ConcurrentResourceContainer<ConnectionResource> container = new ConcurrentResourceContainer<>(
 
-		new ResourceLifecycle<ConnectionResource>() {
+				new ResourceLifecycle<ConnectionResource>() {
 
-			@Override
-			public ConnectionResource buildResource(String name) throws Exception {
-				ConnectionResource resource = new ConnectionResource(Thread.currentThread().getName());
-				Thread.sleep(10);
-				buildCount.incrementAndGet();
-				return resource;
-			}
+					@Override
+					public ConnectionResource buildResource(String name) throws Exception {
+						ConnectionResource resource = new ConnectionResource(Thread.currentThread().getName());
+						Thread.sleep(10);
+						buildCount.incrementAndGet();
+						return resource;
+					}
 
-			@Override
-			public void destoryResource(String name, ConnectionResource resource) throws Exception {
+					@Override
+					public void destoryResource(String name, ConnectionResource resource) throws Exception {
 
-			}
+					}
 
-		}
+				}
 
 		);
 
-		final ConnectionResource[] cr = new ConnectionResource[3];
+		// final ConnectionResource[] cr = new ConnectionResource[3];
 		final Thread[] threads = new Thread[3];
 		final Exception[] exceptions = new Exception[3];
 
@@ -121,7 +123,12 @@ public class ConcurrentResourceContainerTest {
 		// TODO
 		// expected:<2> but was:<3>
 		// Assert.assertEquals(2, buildCount.get()); // NOT 3
-		
+
+		/*
+		 * cr[i] modified in other threads, its new value may not be seen in
+		 * main thread, if not 'volatile'
+		 */
+
 		Assert.assertTrue(cr[0] == cr[1]);
 		Assert.assertFalse(cr[0] == cr[2]);
 
