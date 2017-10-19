@@ -7,7 +7,7 @@ import xyz.downgoon.mydk.framework.CommandException;
 import xyz.downgoon.mydk.framework.CommandFilter;
 import xyz.downgoon.mydk.framework.CommandFilterChain;
 
-class NamedTraceStopableFilter implements CommandFilter {
+public class NamedTraceStopableFilter implements CommandFilter {
 	
 	private String name;
 	

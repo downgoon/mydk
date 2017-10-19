@@ -6,7 +6,7 @@ import xyz.downgoon.mydk.framework.Command;
 import xyz.downgoon.mydk.framework.CommandException;
 import xyz.downgoon.mydk.framework.CommandHandler;
 
-class EchoHandler implements CommandHandler {
+public class EchoHandler implements CommandHandler {
 
 	private String echo = null;
 	
