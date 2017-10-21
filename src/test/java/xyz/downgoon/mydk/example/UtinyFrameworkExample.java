@@ -22,13 +22,13 @@ public class UtinyFrameworkExample {
 		NamedTraceStopableFilter timerFilter = new NamedTraceStopableFilter("timerFilter", false, tracer);
 
 		// path matching
-		framework.location("/**", null, logFilter);
-		framework.location("/fastapi/**", null, timerFilter);
+		framework.location("/**", (CommandHandler) null, logFilter);
+		framework.location("/fastapi/**", timerFilter);
 		framework.location("/fastapi/echo", new EchoHandler(tracer));
 
 		// RESTful style: Resource&Action - EntPoint
 		UserHandler user = new UserHandler();
-		framework.location("/user/**", null, (cmd, chain) -> {
+		framework.location("/user/**", (cmd, chain) -> {
 			System.out.println("-> /user RESTful api ..." + cmd.path());
 			chain.doFilter(cmd);
 			System.out.println("<- /user RESTful api ... Fin");
