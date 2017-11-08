@@ -1,6 +1,5 @@
 package xyz.downgoon.mydk.concurrent;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -11,7 +10,13 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ConcurrentResourceContainer<T> {
 
-	private final Map<String, T> resourceContainer = new HashMap<String, T>();
+	/*
+	 * here the resourceContainer's Map type MUST be 'ConcurrentHashMap' rather
+	 * than 'HashMap' which will occasionally make
+	 * 'ConcurrentResourceContainerTest' fail due to 'concurrent visibility
+	 * issue' of 'HashMap'
+	 */
+	private final Map<String, T> resourceContainer = new ConcurrentHashMap<String, T>();
 
 	private final ConcurrentHashMap<String, ReentrantLock> stuntmanContainer = new ConcurrentHashMap<String, ReentrantLock>();
 
@@ -42,8 +47,9 @@ public class ConcurrentResourceContainer<T> {
 			try {
 				stuntman.lock();
 				resource = resourceContainer.get(name);
-				if (resource == null) {
-					resource = lifecycle.buildResource(name); // build exception
+				if (resource == null) { // double checking
+					// heavy object creating
+					resource = lifecycle.buildResource(name);
 					if (resource != null) {
 						resourceContainer.put(name, resource);
 					}
@@ -85,7 +91,7 @@ public class ConcurrentResourceContainer<T> {
 	private ReentrantLock getStuntmanInstanceByName(String name) {
 		ReentrantLock stuntman = stuntmanContainer.get(name);
 		if (stuntman == null) {
-			ReentrantLock newStuntman = new ReentrantLock();
+			ReentrantLock newStuntman = new ReentrantLock(); // cheap object
 			ReentrantLock preStuntman = stuntmanContainer.putIfAbsent(name, newStuntman);
 			stuntman = (preStuntman != null ? preStuntman : newStuntman);
 		}

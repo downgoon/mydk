@@ -20,10 +20,14 @@ public class TrafficLightTest {
 	public void setUp() throws Exception {
 	}
 
+	protected BooleanSignal createInstance() {
+		return new TrafficLight();
+	}
+	
 	@Test
 	public void testWaitGreen() throws InterruptedException {
 
-		BooleanSignal light = new TrafficLight();
+		BooleanSignal light = createInstance();
 		Assert.assertFalse(light.isGreen());
 
 		AtomicBoolean isBarrierPassed = new AtomicBoolean(false);
