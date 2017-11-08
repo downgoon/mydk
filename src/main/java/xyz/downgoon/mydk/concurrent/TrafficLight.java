@@ -4,7 +4,7 @@ package xyz.downgoon.mydk.concurrent;
  * red/green light: thread will be blocked when red light is on until the light
  * turns to green.
  */
-public class TrafficLight {
+public class TrafficLight implements BooleanSignal {
 
 	/**
 	 * red light is on
@@ -28,10 +28,12 @@ public class TrafficLight {
 		red = !isGreen;
 	}
 
+	@Override
 	public void setRed() {
 		red = true;
 	}
 
+	@Override
 	public void setGreen() throws InterruptedException {
 		red = false;
 		synchronized (greenLight) {
@@ -48,6 +50,7 @@ public class TrafficLight {
 	 *             <i>interrupted status</i> of the current thread is cleared
 	 *             when this exception is thrown.
 	 */
+	@Override
 	public void waitGreen() throws InterruptedException {
 		if (red) {
 			synchronized (greenLight) {
@@ -58,6 +61,7 @@ public class TrafficLight {
 		} // end if
 	}
 
+	@Override
 	public boolean isGreen() {
 		return !red;
 	}

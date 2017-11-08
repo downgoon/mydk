@@ -23,7 +23,7 @@ public class TrafficLightTest {
 	@Test
 	public void testWaitGreen() throws InterruptedException {
 
-		TrafficLight light = new TrafficLight();
+		BooleanSignal light = new TrafficLight();
 		Assert.assertFalse(light.isGreen());
 
 		AtomicBoolean isBarrierPassed = new AtomicBoolean(false);
