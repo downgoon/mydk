@@ -77,5 +77,5 @@ mvn clean package
 - how to deploy
 
 ``` bash
-mvn deploy
+mvn clean package deploy -Possrh
 ```

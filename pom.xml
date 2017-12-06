@@ -4,7 +4,7 @@
 
 	<groupId>xyz.downgoon</groupId>
 	<artifactId>mydk</artifactId>
-	<version>0.3-SNAPSHOT</version>
+	<version>0.3.0</version>
 	<packaging>jar</packaging>
 
 	<name>mydk</name>
@@ -52,7 +52,7 @@
 			<version>1.7.9</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
