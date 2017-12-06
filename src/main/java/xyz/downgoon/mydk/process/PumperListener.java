@@ -10,7 +10,7 @@ import java.io.IOException;
  * @date 2014-7-3
  * @version 1.0
  */
-public interface StreamGobblerListener {
+public interface PumperListener {
 
     /**
      * 文件开头

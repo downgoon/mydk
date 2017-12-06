@@ -26,9 +26,9 @@ public final class ForkFutureLuxury implements ForkFuture {
 
     private Process process;
 
-    private StreamGobbler stdoutGobbler;
+    private StreamPumper stdoutGobbler;
 
-    private StreamGobbler stderrGobbler;
+    private StreamPumper stderrGobbler;
 
     private final String threadTag;
 
@@ -39,13 +39,13 @@ public final class ForkFutureLuxury implements ForkFuture {
     }
 
     //TODO 比较消耗线程，性能较差，但API使用舒服，有待调整。
-    public ForkFutureLuxury(Process process, String threadTag, StreamGobblerListener gobblerListener) {
+    public ForkFutureLuxury(Process process, String threadTag, PumperListener gobblerListener) {
         super();
         this.process = process;
         this.threadTag = threadTag;
         this.threadFactory = new TagThreadFactory(threadTag);
-        this.stdoutGobbler = new StreamGobbler(process.getInputStream(), "forkout", gobblerListener);
-        this.stderrGobbler = new StreamGobbler(process.getErrorStream(), "forkerr", gobblerListener);
+        this.stdoutGobbler = new StreamPumper(process.getInputStream(), "forkout", gobblerListener);
+        this.stderrGobbler = new StreamPumper(process.getErrorStream(), "forkerr", gobblerListener);
         gobbleForkStream();
     }
 

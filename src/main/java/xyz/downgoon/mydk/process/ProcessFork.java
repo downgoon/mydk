@@ -18,7 +18,7 @@ public class ProcessFork {
 
     private final String threadTag;
 
-    private StreamGobblerListener defaultGobblerListener = new StreamGobblerLogger();
+    private PumperListener defaultGobblerListener = new LoggerListener();
 
     public ProcessFork(File workingDir) {
         this(workingDir, ProcessFork.class.getSimpleName());
@@ -47,7 +47,7 @@ public class ProcessFork {
         return fork(command, false);
     }
 
-    public ForkFuture fork(String command, StreamGobblerListener gobblerListener) throws IOException {
+    public ForkFuture fork(String command, PumperListener gobblerListener) throws IOException {
         Process process = Runtime.getRuntime().exec(command, workingEnv, workingDir);
         ForkFuture future = new ForkFutureLuxury(process, threadTag, gobblerListener);
         return future;

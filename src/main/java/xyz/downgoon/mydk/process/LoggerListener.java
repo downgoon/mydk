@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
  * @date 2014-7-3
  * @version 1.0
  */
-public class StreamGobblerLogger implements StreamGobblerListener {
+public class LoggerListener implements PumperListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StreamGobblerLogger.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerListener.class);
 
     @Override
     public void onReadBegin(String gobblerName) {

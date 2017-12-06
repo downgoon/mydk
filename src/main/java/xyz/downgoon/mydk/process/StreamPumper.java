@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2014-7-2
  * @version 1.0
  */
-public class StreamGobbler implements Runnable {
+public class StreamPumper implements Runnable {
 
     private final BufferedReader reader;
 
@@ -28,7 +28,7 @@ public class StreamGobbler implements Runnable {
     /**
      * 侦听器（可空）
      * */
-    private final StreamGobblerListener listener;
+    private final PumperListener listener;
 
     private AtomicInteger stringLineCount = new AtomicInteger(0);
 
@@ -36,11 +36,11 @@ public class StreamGobbler implements Runnable {
 
     private volatile IOException ioexception = null;
 
-    public StreamGobbler(InputStream inputStream, String name) {
+    public StreamPumper(InputStream inputStream, String name) {
         this(inputStream, name, null);
     }
 
-    public StreamGobbler(InputStream inputStream, String name, StreamGobblerListener listener) {
+    public StreamPumper(InputStream inputStream, String name, PumperListener listener) {
         this.reader = new BufferedReader(new InputStreamReader(inputStream));
         this.buffer = new LinkedBlockingQueue<StringLine>();
         this.name = name;
