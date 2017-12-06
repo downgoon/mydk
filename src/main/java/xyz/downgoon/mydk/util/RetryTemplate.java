@@ -31,6 +31,7 @@ public class RetryTemplate {
     }
     
     /***
+     * 为指定代理对象构造重试模板
      * @param   delegate    重试方法作用的目标对象
      * @param   retryIntervalSec  重试次数及其时间间隔（单位：秒）   
      * */
@@ -42,9 +43,11 @@ public class RetryTemplate {
     }
 
     /**
+     * 通用重试方法：通过指定方法名和参数来调用方法
      * @param   methodName  重试的方法名称
      * @param   方法的参数
      * @throws  如果调用期间，有异常，则表示失败，会按给定的次数重试；如果依然失败，抛出最后一次的异常。
+     * @return	返回底层代理对象的方法返回值
      * */
     public Object retry(String methodName, Object... args) throws Exception {
         Method method = parseMethod(methodName, args);
