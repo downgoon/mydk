@@ -1,4 +1,4 @@
-package xyz.downgoon.mydk.process;
+package xyz.downgoon.mydk.process.underlying;
 
 
 import java.util.concurrent.CountDownLatch;
@@ -12,6 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import xyz.downgoon.mydk.concurrent.TagThreadFactory;
+import xyz.downgoon.mydk.process.ForkFuture;
+import xyz.downgoon.mydk.process.ForkTimeoutException;
+import xyz.downgoon.mydk.process.PumperListener;
 
 /**
  * @title ForkFuture
@@ -26,9 +29,9 @@ public final class ForkFutureLuxury implements ForkFuture {
 
     private Process process;
 
-    private StreamPumper stdoutGobbler;
+    private StreamPumper stdoutPumper;
 
-    private StreamPumper stderrGobbler;
+    private StreamPumper stderrPumper;
 
     private final String threadTag;
 
@@ -39,21 +42,21 @@ public final class ForkFutureLuxury implements ForkFuture {
     }
 
     //TODO 比较消耗线程，性能较差，但API使用舒服，有待调整。
-    public ForkFutureLuxury(Process process, String threadTag, PumperListener gobblerListener) {
+    public ForkFutureLuxury(Process process, String threadTag, PumperListener pumperListener) {
         super();
         this.process = process;
         this.threadTag = threadTag;
         this.threadFactory = new TagThreadFactory(threadTag);
-        this.stdoutGobbler = new StreamPumper(process.getInputStream(), "forkout", gobblerListener);
-        this.stderrGobbler = new StreamPumper(process.getErrorStream(), "forkerr", gobblerListener);
-        gobbleForkStream();
+        this.stdoutPumper = new StreamPumper(process.getInputStream(), "forkout", pumperListener);
+        this.stderrPumper = new StreamPumper(process.getErrorStream(), "forkerr", pumperListener);
+        pumperForkStream();
     }
 
-    private void gobbleForkStream() {
+    private void pumperForkStream() {
         ExecutorService executorService = Executors.newFixedThreadPool(2, threadFactory);//not reusable
         try {
-            executorService.submit(stdoutGobbler);
-            executorService.submit(stderrGobbler);
+            executorService.submit(stdoutPumper);
+            executorService.submit(stderrPumper);
         } finally {
             executorService.shutdown();
         }
@@ -61,32 +64,32 @@ public final class ForkFutureLuxury implements ForkFuture {
 
     @Override
     public String readLineStdout() throws InterruptedException {
-        return stdoutGobbler.readLine();
+        return stdoutPumper.readLine();
     }
 
     @Override
     public String readLineStderr() throws InterruptedException {
-        return stderrGobbler.readLine();
+        return stderrPumper.readLine();
     }
 
     @Override
     public String readFullyStdout() throws InterruptedException {
-        return stdoutGobbler.readFully();
+        return stdoutPumper.readFully();
     }
 
     @Override
     public String readFullyStderr() throws InterruptedException {
-        return stderrGobbler.readFully();
+        return stderrPumper.readFully();
     }
 
     @Override
     public boolean hasStdout() {
-        return stdoutGobbler.isStreamBegan();
+        return stdoutPumper.isStreamBegan();
     }
 
     @Override
     public boolean hasStderr() {
-        return stderrGobbler.isStreamBegan();
+        return stderrPumper.isStreamBegan();
     }
 
     @Override

@@ -3,6 +3,9 @@ package xyz.downgoon.mydk.process;
 import java.io.File;
 import java.io.IOException;
 
+import xyz.downgoon.mydk.process.underlying.ForkFutureLuxury;
+import xyz.downgoon.mydk.process.underlying.LoggerListener;
+
 /**
  * @title ProcessFork
  * @description Runtime.exec() 封装，支持：子进程输出读取和等待超时 
@@ -18,7 +21,7 @@ public class ProcessFork {
 
     private final String threadTag;
 
-    private PumperListener defaultGobblerListener = new LoggerListener();
+    private PumperListener pumperListener = new LoggerListener();
 
     public ProcessFork(File workingDir) {
         this(workingDir, ProcessFork.class.getSimpleName());
@@ -37,7 +40,7 @@ public class ProcessFork {
 
     public ForkFuture fork(String command, boolean isDebugMode) throws IOException {
         if (isDebugMode) {
-            return fork(command, defaultGobblerListener);
+            return fork(command, pumperListener);
         } else {
             return fork(command, null);
         }
@@ -47,9 +50,9 @@ public class ProcessFork {
         return fork(command, false);
     }
 
-    public ForkFuture fork(String command, PumperListener gobblerListener) throws IOException {
+    public ForkFuture fork(String command, PumperListener pumperListener) throws IOException {
         Process process = Runtime.getRuntime().exec(command, workingEnv, workingDir);
-        ForkFuture future = new ForkFutureLuxury(process, threadTag, gobblerListener);
+        ForkFuture future = new ForkFutureLuxury(process, threadTag, pumperListener);
         return future;
     }
 
