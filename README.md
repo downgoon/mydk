@@ -38,6 +38,7 @@ the lastest release version can be found here [g:"xyz.downgoon" a:"mydk"](http:/
 - [ConditionTrafficLight.java](src/test/java/xyz/downgoon/mydk/concurrent/ConditionTrafficLightTest.java)
 - [Watchdog](src/test/java/xyz/downgoon/mydk/concurrent/WatchdogDemo.java)
 - [ThreadContext](src/test/java/xyz/downgoon/mydk/concurrent/ThreadContextTest.java)
+- [TagThreadFactory](src/test/java/xyz/downgoon/mydk/concurrent/TagThreadFactoryTest.java)
 
 ### testing
 
