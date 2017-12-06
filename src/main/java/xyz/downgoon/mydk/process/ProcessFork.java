@@ -23,6 +23,10 @@ public class ProcessFork {
 
     private PumperListener pumperListener = new LoggerListener();
 
+    public ProcessFork() {
+    	this(new File("."));
+    }
+    
     public ProcessFork(File workingDir) {
         this(workingDir, ProcessFork.class.getSimpleName());
     }
