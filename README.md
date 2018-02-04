@@ -56,6 +56,7 @@ the lastest release version can be found here [g:"xyz.downgoon" a:"mydk"](http:/
 - [AntPathMatcher.java](src/test/java/xyz/downgoon/mydk/util/AntPathMatcherTest.java)
 - [RetryTemplate.java](src/test/java/xyz/downgoon/mydk/util/RetryTemplateTest.java)
 - [OsUtils.java](src/main/java/xyz/downgoon/mydk/util/OsUtils.java)
+- [FileUtils.java](src/test/java/xyz/downgoon/mydk/util/FileUtilsTest.java)
 
 
 
