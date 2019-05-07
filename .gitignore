@@ -8,6 +8,10 @@
 #######################################################################################################
 #######################################################################################################
 
+node_modules/
+package-lock.json
+package.json
+
 ## .gitignore for java
 ## https://raw.githubusercontent.com/github/gitignore/master/Java.gitignore
 
