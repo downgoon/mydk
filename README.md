@@ -33,6 +33,7 @@ the lastest release version can be found here [g:"xyz.downgoon" a:"mydk"](http:/
 
 ### concurrent
 
+
 - [ConcurrentResourceContainer](src/test/java/xyz/downgoon/mydk/concurrent/ConcurrentResourceContainerTest.java)
 - [ConcurrentCounter](src/test/java/xyz/downgoon/mydk/concurrent/ConcurrentCounterTest.java)
 - [TrafficLight.java](src/test/java/xyz/downgoon/mydk/concurrent/TrafficLightTest.java)
@@ -47,9 +48,11 @@ the lastest release version can be found here [g:"xyz.downgoon" a:"mydk"](http:/
 
 ### testing
 
+- [Xray](src/test/java/xyz/downgoon/mydk/testing/XrayTest.java): White-Box Unified Concurrent Testing Framework
 - [MiniHttpd.java](src/main/java/xyz/downgoon/mydk/testing/MiniHttpd.java)
 - [MiniHttpc.java](src/main/java/xyz/downgoon/mydk/testing/MiniHttpc.java)
 - [ConsoleCmder.java](src/main/java/xyz/downgoon/mydk/testing/ConsoleCmder.java)
+- [FileTailAppender](src/main/java/xyz/downgoon/mydk/testing/FileTailAppender.java)
 
 
 ### util

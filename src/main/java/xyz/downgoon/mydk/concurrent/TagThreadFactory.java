@@ -4,11 +4,11 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @title TagThreadFactory
- * @description 可命名的ThreadFactory 
  * @author liwei39
- * @date 2014-7-3
  * @version 1.0
+ * @title TagThreadFactory
+ * @description 可命名的ThreadFactory
+ * @date 2014-7-3
  */
 public class TagThreadFactory implements ThreadFactory {
 
@@ -31,10 +31,14 @@ public class TagThreadFactory implements ThreadFactory {
     @Override
     public Thread newThread(Runnable r) {
         Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
-        if (t.isDaemon())
+        if (t.isDaemon()) {
             t.setDaemon(false);
-        if (t.getPriority() != Thread.NORM_PRIORITY)
+        }
+
+        if (t.getPriority() != Thread.NORM_PRIORITY) {
             t.setPriority(Thread.NORM_PRIORITY);
+        }
+
         return t;
     }
 
