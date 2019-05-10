@@ -1,83 +1,138 @@
 package xyz.downgoon.mydk.testing;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class XrayTest {
 
-    static class TestingCounter {
+    static class TestingDataStore {
 
-        private int count = 0;
+        private ConcurrentHashMap<String, String> redisMap = new ConcurrentHashMap();
+
+        private AtomicInteger redisHit = new AtomicInteger();
+
+        private AtomicInteger redisLos = new AtomicInteger();
+
+        private AtomicInteger mysqlCnt = new AtomicInteger();
+
+        private AtomicInteger readCnt = new AtomicInteger();
 
         private Random rand = new Random();
 
-        public int incr(int delta) {
-            count += (delta - 2);
-            Xray.xray().dot("S1");
-            count += 2;
-            Xray.xray().dot("S2");
-            return count;
+        private static final Xray XRAY = Xray.xray(TestingDataStore.class);
+
+        public String getData(String key) {
+            readCnt.incrementAndGet();
+            XRAY.dot("S1");
+            String cachedValue = getDataFromRedis(key);
+            if (cachedValue == null) {
+                XRAY.dot("S2");
+
+                String refreshedValue = getDataFromMySQL(key);
+                setDataIntoRedis(key, refreshedValue);
+            }
+            return cachedValue;
         }
 
-        public int get() {
-            return count;
+        private String getDataFromRedis(String key) {
+
+            String cached = redisMap.get(key);
+            if (cached != null) {
+                redisHit.incrementAndGet();
+            } else {
+                redisLos.incrementAndGet();
+            }
+            return cached;
+        }
+
+        private void setDataIntoRedis(String key, String value) {
+            redisMap.put(key, value);
+        }
+
+        private String getDataFromMySQL(String key) {
+            mysqlCnt.incrementAndGet();
+            return key + "@" + Math.abs(rand.nextLong());
+        }
+
+        @Override
+        public String toString() {
+            return "{" +
+                    "redisHit=" + redisHit.get() +
+                    ", redisLos=" + redisLos.get() +
+                    ", mysqlCnt=" + mysqlCnt.get() +
+                    ", readCnt=" + readCnt.get() +
+                    "} on " + redisMap.toString();
         }
 
     }
 
 
+    private static XrayCT xrayCT = (XrayCT) Xray.xray(TestingDataStore.class);
+
     @Test
     public void testSingle() {
-        TestingCounter cnt = new TestingCounter();
-        cnt.incr(5);
-        Assert.assertEquals(5, cnt.get());
-
-        cnt.incr(10);
-        Assert.assertEquals(15, cnt.get());
+        TestingDataStore tds = new TestingDataStore();
+        tds.getData("SN1234");
+        System.out.println(tds);
+        tds.getData("SN1234");
+        System.out.println(tds);
+        tds.getData("SN1234");
+        System.out.println(tds);
     }
 
 
     @Test
     public void testC2NoSeq() {
-        TestingCounter cnt = new TestingCounter();
+        TestingDataStore tds = new TestingDataStore();
 
-        XrayCTFactory.get("DEFAULT")
-                .start(() -> {
-                    cnt.incr(10);
-                }, "T1", "T2", "T3").await((logs) -> {
+        xrayCT.start(() -> {
+            tds.getData("SN1234");
+        }, "T1", "T2", "T3").await((logs) -> {
 
             System.out.println(logs);
         });
 
-        System.out.println(cnt.get());
+        System.out.println(tds);
 
 
     }
 
 
     @Test
-    public void testC3Seq() {
-        TestingCounter cnt = new TestingCounter();
+    public void testC3Seq1() {
+        TestingDataStore tds = new TestingDataStore();
 
+        xrayCT.seq("T1#S1", "T1#S2", "T2#S1", "T2#S2", "T3#S1", "T3#S2");
 
-        XrayCTFactory.get("DEFAULT")
-                .seq("T1", "S1")
-                .seq("T1", "S2")
-                .seq("T2", "S1")
-                .seq("T2", "S2")
-                .seq("T3", "S1")
-                .seq("T3", "S2")
-                .startAndAwait(() -> {
-                    cnt.incr(10);
-                }, new String[]{
-                        "T1", "T2", "T3"
-                }, (logs) -> {
-                    System.out.println(cnt.get());
-                    System.out.println(logs);
-                });
-
-
+        xrayCT.startAndAwait(() -> {
+            tds.getData("SN1234");
+        }, new String[]{
+                "T1", "T2", "T3"
+        }, (logs) -> {
+            System.out.println(tds);
+            System.out.println(logs);
+        });
     }
+
+    @Test
+    public void testC3Seq2() {
+        TestingDataStore tds = new TestingDataStore();
+
+        xrayCT.seq("T1#S1", "T2#S1", "T3#S1", "T1#S2", "T2#S2", "T3#S2");
+
+        xrayCT.startAndAwait(() -> {
+            tds.getData("SN1234");
+        }, new String[]{
+                "T1", "T2", "T3"
+        }, (logs) -> {
+            System.out.println(tds);
+            System.out.println(logs);
+        });
+    }
+
 }

@@ -18,8 +18,8 @@ public interface Xray {
         return XrayCTFactory.get(name);
     }
 
-    static Xray xray() {
-        return xray("DEFAULT");
+    static Xray xray(Class anyClass) {
+        return XrayCTFactory.get(anyClass.getName());
     }
 
 }

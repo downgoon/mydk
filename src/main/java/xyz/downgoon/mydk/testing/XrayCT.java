@@ -69,6 +69,21 @@ public class XrayCT implements Xray {
         return this;
     }
 
+
+    /**
+     * @param seqNotations a notation sequence of dotId, e.g. "T1#S1", "T2#S1", "T1#S2", "T2#S2".
+     *                     a dotId is a combination of threadName and dotName conjunct with '#',
+     *                     like 'T1#S2' indicating the 2nd step at the 1st thread
+     */
+    public XrayCT seq(String... seqNotations) {
+        for (String dotId :
+                seqNotations) {
+            String[] pair = ImmutableDotSequence.parseDotId(dotId);
+            seq(pair[0], pair[1]);
+        }
+        return this;
+    }
+
     /**
      * start concurrent testing
      *
@@ -157,6 +172,26 @@ public class XrayCT implements Xray {
          */
         public static String toDotId(String dotName) {
             return toDotId(Thread.currentThread().getName(), dotName);
+        }
+
+        /**
+         * split the dotId into threadName and dotName
+         *
+         * @param dotId a dotId is a combination of threadName and dotName conjunct with '#', like 'T1#S2' indicating the 2nd step at the 1st thread
+         * @return the pair of threadName and dotName
+         */
+        public static String[] parseDotId(String dotId) {
+            int idx = dotId.indexOf("#");
+            if (idx == -1) {
+                throw new IllegalArgumentException(String.format(
+                        "a dotId is a combination of threadName and dotName conjunct with '#', " +
+                                "like 'T1#S2' indicating the 2nd step at the 1st thread, rather than [%s]", dotId));
+            }
+            return new String[]{
+                    dotId.substring(0, idx),
+                    dotId.substring(idx + "#".length())
+            };
+
         }
 
 
