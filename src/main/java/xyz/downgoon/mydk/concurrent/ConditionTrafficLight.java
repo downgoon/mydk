@@ -6,10 +6,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * another implementation of {@link TrafficLight } with {@link Condition } on JDK5
- * @see	TrafficLight
+ * another implementation of {@link SyncNotifyTrafficLight } with {@link Condition } on JDK5
+ * @see    SyncNotifyTrafficLight
  * */
-public class ConditionTrafficLight implements BooleanSignal {
+public class ConditionTrafficLight implements TrafficLight {
 
 	private static final boolean RED_ON = false;
 	private static final boolean GREEN_ON = true;

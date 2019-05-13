@@ -1,5 +1,7 @@
 package xyz.downgoon.mydk.util;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public interface OrderedHash<K, V> {
     NonThreadSafeOrderedHash add(K key, V value);
 
@@ -11,9 +13,18 @@ public interface OrderedHash<K, V> {
 
     int indexOf(K key);
 
-    V getBefore(String key);
+    /**
+     * if key not found, then return null and isHead is false;
+     * if key is the head, then return null but isHead is true.
+     * */
+    V getBefore(String key, AtomicBoolean isHead);
 
-    V getAfter(String key);
+
+    /**
+     * if key not found, then return null and isTail is false;
+     * if key is the tail, then return null but isTail is true.
+     * */
+    V getAfter(String key, AtomicBoolean isTail);
 
     V getHead();
 

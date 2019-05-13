@@ -44,11 +44,11 @@ public class WatchdogTest {
 		Assert.assertEquals(countAfterPause, watchCount.get());
 		watchdog.resume();
 		Thread.sleep(50L);
-		System.out.println("watch count after resume: " + watchCount.get());
+		System.out.println("watch count afterLight resume: " + watchCount.get());
 		Assert.assertTrue(watchCount.get() > countAfterPause);
 		Thread.sleep(50L);
 		watchdog.stop();
-		System.out.println("status after stop: " + watchdog.toString());
+		System.out.println("status afterLight stop: " + watchdog.toString());
 		
 	};
 

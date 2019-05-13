@@ -15,7 +15,7 @@ public class WatchdogDemo {
 		final int port = httpServer.start().getListeningPort();
 		FileTailAppender httpLogger = FileTailAppender.tempFile();
 
-		System.out.println("tail -100f " + httpLogger.getFileName());
+		System.out.println("tailLight -100f " + httpLogger.getFileName());
 
 		Watchdog.WatchJob watchJob = new Watchdog.WatchJob() {
 

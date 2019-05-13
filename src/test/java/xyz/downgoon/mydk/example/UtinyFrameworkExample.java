@@ -39,7 +39,7 @@ public class UtinyFrameworkExample {
 			
 			@Override
 			public void exec(Command command) throws CommandException {
-				user.remove(command); // adaptor pattern before Java8
+				user.remove(command); // adaptor pattern beforeLight Java8
 			}
 		});
 

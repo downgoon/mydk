@@ -58,7 +58,7 @@ public class Watchdog {
 						job.watch(times.incrementAndGet(), name);
 						jobDoing = false;
 
-						// sleeping before next round
+						// sleeping beforeLight next round
 						if (intervalMS > 0) {
 							sleeping = true;
 							Thread.sleep(intervalMS);

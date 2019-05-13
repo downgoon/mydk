@@ -36,7 +36,7 @@ public class MiniHttpd {
 	 *            automatically allocated.
 	 * 
 	 * @param responseDelayMS
-	 *            sleeping milliseconds before response outputting to clients
+	 *            sleeping milliseconds beforeLight response outputting to clients
 	 * 
 	 * @param responseJson
 	 *            response message in json format
@@ -55,7 +55,7 @@ public class MiniHttpd {
 
 	/**
 	 * create a http server at random port which you can get by calling
-	 * {@link #getListeningPort()} after {@link #start()}
+	 * {@link #getListeningPort()} afterLight {@link #start()}
 	 */
 	public MiniHttpd() {
 		this(0, 0, "{\"id\":2,\"name\":\"downgoon\"," + "\"age\":25,\"credit\":8888}");
@@ -111,7 +111,7 @@ public class MiniHttpd {
 
 							writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-							// delay some time before response outputting
+							// delay some time beforeLight response outputting
 							if (responseDelayMS > 0) {
 								Thread.sleep(responseDelayMS);
 							}

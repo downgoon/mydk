@@ -1,14 +1,16 @@
 package xyz.downgoon.mydk.testing;
 
-import xyz.downgoon.mydk.concurrent.BooleanSignal;
-import xyz.downgoon.mydk.concurrent.ConditionTrafficLight;
-import xyz.downgoon.mydk.util.NonThreadSafeOrderedHash;
+import xyz.downgoon.mydk.concurrent.LatchTrafficLight;
+import xyz.downgoon.mydk.concurrent.TrafficLight;
+import xyz.downgoon.mydk.concurrent.SyncNotifyTrafficLight;
+import xyz.downgoon.mydk.util.ImmutableOrderedHash;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 /**
  * White-Box Unified Concurrent Testing Framework
@@ -21,51 +23,76 @@ public class XrayCT implements Xray {
 
     private String xrayName;
 
-    private volatile ImmutableDotSequence dotSeqInited = null;
+    private volatile ImmutableOrderedHash<String, TrafficLight> dotLightsHashInited = null;
 
     private List<String> dotIds = new ArrayList<>();
 
-    private List<String> logTracer = new CopyOnWriteArrayList<String>();
+    private volatile BiConsumer<String, String> dotConsumer;
+
+    private Logger LOG = Logger.getLogger(XrayCT.class.getName());
 
     XrayCT(String xrayName) {
         this.xrayName = xrayName;
-        logTracer.add(String.format("log tracer for [%s]\r\n", xrayName));
     }
 
 
     @Override
     public void dot(String dotName) {
-        if (dotSeqInited == null) {
-            return;
-        }
-        String dotId = ImmutableDotSequence.toDotId(dotName);
-        BooleanSignal preLight = dotSeqInited.before(dotId);
-        if (preLight == null) {
+        if (dotLightsHashInited == null) {
             return;
         }
 
+        String dotId = DotUtils.toDotId(dotName);
+        System.out.println(String.format("dotcall %s", dotId));
+
+        // await green light for previous dot
+        AtomicBoolean isHead = new AtomicBoolean();
+        TrafficLight preTrafficLight = dotLightsHashInited.getBefore(dotId, isHead);
+        if (preTrafficLight == null && !isHead.get()) {
+            // key not found, do nothing
+            return;
+        }
+        if (preTrafficLight != null && isHead.get()) {
+            // illegal state
+            return;
+        }
+
+        if (preTrafficLight != null && !isHead.get()) {
+            System.out.println(String.format("[%s] -- await green light: [%s]", dotId, preTrafficLight));
+            try {
+                preTrafficLight.waitGreen();
+                System.out.println(String.format("[%s] -| got green light: [%s]", dotId, preTrafficLight));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /*
+         * (preTrafficLight != null && !isHead.get()) || (preTrafficLight == null && isHead.get())
+         * */
+        // dot consumer callback
+        if (dotConsumer != null) {
+            dotConsumer.accept(Thread.currentThread().getName(), dotName);
+        }
+
+
+        // turn green light for next dot
+        TrafficLight currTrafficLight = dotLightsHashInited.getValue(dotId);
+        if (currTrafficLight == null) {
+            return;
+        }
         try {
-            preLight.waitGreen();
+            System.out.println(String.format("[%s] || turn green light: [%s]", dotId, currTrafficLight));
+            currTrafficLight.setGreen();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        logTracer.add(dotId + "\r\n");
-
-        BooleanSignal postLight = dotSeqInited.after(dotId);
-        if (postLight == null) {
-            return;
-        }
-        try {
-            postLight.setGreen();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
     }
 
-    public XrayCT seq(String threadName, String dotName) {
-        dotIds.add(ImmutableDotSequence.toDotId(threadName, dotName));
+    public XrayCT seqTS(String threadName, String dotName) {
+        dotIds.add(DotUtils.toDotId(threadName, dotName));
         return this;
     }
 
@@ -76,10 +103,9 @@ public class XrayCT implements Xray {
      *                     like 'T1#S2' indicating the 2nd step at the 1st thread
      */
     public XrayCT seq(String... seqNotations) {
-        for (String dotId :
-                seqNotations) {
-            String[] pair = ImmutableDotSequence.parseDotId(dotId);
-            seq(pair[0], pair[1]);
+        for (String dotId : seqNotations) {
+            String[] pair = DotUtils.parseDotId(dotId);
+            seqTS(pair[0], pair[1]);
         }
         return this;
     }
@@ -87,42 +113,66 @@ public class XrayCT implements Xray {
     /**
      * start concurrent testing
      *
-     * @param runnable    runnable job to be executed on multi-threads
-     * @param threadNames multi-threads size and their names
+     * @param concurrentTarget concurrentTarget job to be executed on multi-threads
+     * @param threadNames      multi-threads size and their names
      */
-    public XrayCT start(Runnable runnable, String... threadNames) {
+    public XrayCT start(Runnable concurrentTarget, String... threadNames) {
         if (dotIds.size() > 0) {
-            if (dotSeqInited != null) {
+            System.out.println("dotIds: " + dotIds);
+            if (dotLightsHashInited != null) {
                 throw new IllegalStateException(String.format("XrayCT [%s] already started", xrayName));
             }
-            while (dotSeqInited == null) {
-                dotSeqInited = new ImmutableDotSequence(dotIds);
+            while (dotLightsHashInited == null) {
+                dotLightsHashInited = DotUtils.dotLightsHash(dotIds);
             }
-            try {
-                dotSeqInited.head().setGreen();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+
+            System.out.println(">>>" + this.toString());
+
         }
 
-        for (String threadName : threadNames
-                ) {
-            Thread thread = new Thread(runnable, threadName);
+        CountDownLatch readyLatch = new CountDownLatch(threadNames.length);
+        for (String threadName : threadNames) {
+            Thread thread = new Thread(() -> {
+                try {
+                    readyLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                concurrentTarget.run();
+            }, threadName);
+
             thread.start();
+            readyLatch.countDown();
         }
         return this;
     }
 
-    public void await(Consumer<List<String>> callback) {
-        if (dotSeqInited != null && dotSeqInited.size() > 0) {
+
+    /**
+     * start concurrent testing
+     *
+     * @param concurrentTarget concurrentTarget job to be executed on multi-threads
+     * @param threadNames      multi-threads size and their names
+     * @param dotConsumer      dot consumer callback
+     */
+    public XrayCT start(Runnable concurrentTarget, String[] threadNames, BiConsumer<String, String> dotConsumer) {
+        this.dotConsumer = dotConsumer;
+        return start(concurrentTarget, threadNames);
+    }
+
+    /**
+     * await the last dot to be finished and then callback
+     */
+    public void await(Consumer<String> callback) {
+        if (dotLightsHashInited != null && dotLightsHashInited.size() > 0) {
             try {
-                dotSeqInited.tail().waitGreen();
+                dotLightsHashInited.getTail().waitGreen();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
         if (callback != null) {
-            callback.accept(logTracer);
+            callback.accept(xrayName);
         }
     }
 
@@ -131,34 +181,26 @@ public class XrayCT implements Xray {
     }
 
 
-    public void startAndAwait(Runnable runnable, String[] threadNames, Consumer<List<String>> callback) {
-        start(runnable, threadNames).await(callback);
-    }
-
-
     @Override
     public String toString() {
-        return xrayName;
+        return xrayName + " => " + dotLightsHashInited;
     }
 
-    /**
-     * a thread-safe ordered-hash sequence
-     */
-    private static class ImmutableDotSequence {
 
-        private NonThreadSafeOrderedHash<String, BooleanSignal> seq = new NonThreadSafeOrderedHash<>();
+    private static class DotUtils {
 
         /**
-         * {@link ImmutableDotSequence} is thread-safe, though its underlying dependency class {@link NonThreadSafeOrderedHash} is not.
-         *
-         * @param dotIds dotId list rather than dotName
+         * generate dot lights hash for dot sequence
          */
-        ImmutableDotSequence(List<String> dotIds) {
-            for (String dotId : dotIds
-                    ) {
-                seq.add(dotId, new ConditionTrafficLight());
+        public static ImmutableOrderedHash<String, TrafficLight> dotLightsHash(List<String> dotIds) {
+            LinkedHashMap<String, TrafficLight> hash = new LinkedHashMap<>();
+            for (String dotId : dotIds) {
+                hash.put(dotId, new TaggedTrafficLight(dotId));
             }
+
+            return new ImmutableOrderedHash<String, TrafficLight>(hash);
         }
+
 
         /**
          * dot-id is the combination of thread-name and dot-name
@@ -194,31 +236,18 @@ public class XrayCT implements Xray {
 
         }
 
+    }
 
-        public int size() {
-            return seq.size();
+    private static class TaggedTrafficLight extends LatchTrafficLight {
+        private String tag;
+
+        public TaggedTrafficLight(String tag) {
+            this.tag = tag;
         }
 
-        public BooleanSignal head() {
-            return seq.getHead();
-        }
-
-        public BooleanSignal tail() {
-            return seq.getTail();
-        }
-
-        /**
-         * @param dotId dotId not dotName
-         */
-        public BooleanSignal before(String dotId) {
-            return seq.getBefore(dotId);
-        }
-
-        /**
-         * @param dotId dotId not dotName
-         */
-        public BooleanSignal after(String dotId) {
-            return seq.getAfter(dotId);
+        @Override
+        public String toString() {
+            return "TrafficLight{" + tag + '}';
         }
 
     }
