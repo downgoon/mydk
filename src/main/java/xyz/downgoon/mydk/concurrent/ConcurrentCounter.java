@@ -47,7 +47,11 @@ public class ConcurrentCounter implements Counter {
 
     @Override
     public Long getCount(String key) {
-        return map.get(key).get();
+        AtomicLong v = map.get(key);
+        if (v == null) {
+            return null;
+        }
+        return v.get();
     }
 
     @Override
