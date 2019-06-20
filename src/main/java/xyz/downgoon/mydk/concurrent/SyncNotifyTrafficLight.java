@@ -28,12 +28,12 @@ public class SyncNotifyTrafficLight implements TrafficLight {
     }
 
     @Override
-    public void setRed() {
+    public void turnRed() {
         red = true;
     }
 
     @Override
-    public void setGreen() throws InterruptedException {
+    public void turnGreen() throws InterruptedException {
         red = false;
         synchronized (greenLight) {
             greenLight.notifyAll();
@@ -50,13 +50,27 @@ public class SyncNotifyTrafficLight implements TrafficLight {
      */
     @Override
     public void waitGreen() throws InterruptedException {
+        waitGreen(-1L);
+    }
+
+
+    @Override
+    public boolean waitGreen(long timeout) throws InterruptedException {
         if (red) {
             synchronized (greenLight) {
                 while (red) { // double checking
-                    greenLight.wait();
+                    if (timeout >= 0) {
+                        greenLight.wait(timeout);
+                        return true;
+                    } else {
+                        greenLight.wait();
+                        return true;
+                    }
+
                 }
             }
         } // end if
+        return true;
     }
 
     @Override

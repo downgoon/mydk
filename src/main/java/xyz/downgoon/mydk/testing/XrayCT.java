@@ -1,8 +1,9 @@
 package xyz.downgoon.mydk.testing;
 
+import xyz.downgoon.mydk.concurrent.ConcurrentCounter;
+import xyz.downgoon.mydk.concurrent.Counter;
 import xyz.downgoon.mydk.concurrent.LatchTrafficLight;
 import xyz.downgoon.mydk.concurrent.TrafficLight;
-import xyz.downgoon.mydk.concurrent.SyncNotifyTrafficLight;
 import xyz.downgoon.mydk.util.ImmutableOrderedHash;
 
 import java.util.*;
@@ -25,9 +26,23 @@ public class XrayCT implements Xray {
 
     private volatile ImmutableOrderedHash<String, TrafficLight> dotLightsHashInited = null;
 
-    private List<String> dotIds = new ArrayList<>();
+    /**
+     * e.g. "T1#S1", "T1#S2", "T2#S1", "T2#S2"
+     */
+    private final List<String> dotIds = new ArrayList<>();
 
-    private volatile BiConsumer<String, String> dotConsumer;
+    /**
+     * e.g. "S1", "S2"
+     */
+    private final Set<String> dotNames = new LinkedHashSet<>();
+
+
+    /**
+     * threadName -> number of steps which have been finished
+     */
+    private final Counter threadFinSteps = new ConcurrentCounter();
+
+    private volatile TripleConsumer<Boolean, String, String> dotConsumer;
 
     private Logger LOG = Logger.getLogger(XrayCT.class.getName());
 
@@ -72,7 +87,8 @@ public class XrayCT implements Xray {
          * */
         // dot consumer callback
         if (dotConsumer != null) {
-            dotConsumer.accept(Thread.currentThread().getName(), dotName);
+            threadFinSteps.increaseAndGet(Thread.currentThread().getName());
+            dotConsumer.accept(true, Thread.currentThread().getName(), dotName);
         }
 
 
@@ -83,7 +99,7 @@ public class XrayCT implements Xray {
         }
         try {
             System.out.println(String.format("[%s] || turn green light: [%s]", dotId, currTrafficLight));
-            currTrafficLight.setGreen();
+            currTrafficLight.turnGreen();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -93,6 +109,7 @@ public class XrayCT implements Xray {
 
     public XrayCT seqTS(String threadName, String dotName) {
         dotIds.add(DotUtils.toDotId(threadName, dotName));
+        dotNames.add(dotName);
         return this;
     }
 
@@ -139,6 +156,8 @@ public class XrayCT implements Xray {
                     e.printStackTrace();
                 }
                 concurrentTarget.run();
+                hookThreadOnClose(Thread.currentThread().getName());
+
             }, threadName);
 
             thread.start();
@@ -149,13 +168,38 @@ public class XrayCT implements Xray {
 
 
     /**
+     *
+     * */
+    protected void hookThreadOnClose(String threadName) {
+        if (threadFinSteps.getCount(threadName) < dotNames.size()) {
+
+            for (String dotName : dotNames) {
+                String dotId = DotUtils.toDotId(threadName, dotName);
+                TrafficLight light = dotLightsHashInited.getValue(dotId);
+                if (!light.isGreen()) {
+                    try {
+                        light.turnGreen();
+                        dotConsumer.accept(false, threadName, dotName);
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
+
+    }
+
+
+    /**
      * start concurrent testing
      *
      * @param concurrentTarget concurrentTarget job to be executed on multi-threads
      * @param threadNames      multi-threads size and their names
      * @param dotConsumer      dot consumer callback
      */
-    public XrayCT start(Runnable concurrentTarget, String[] threadNames, BiConsumer<String, String> dotConsumer) {
+    public XrayCT start(Runnable concurrentTarget, String[] threadNames, TripleConsumer<Boolean, String, String> dotConsumer) {
         this.dotConsumer = dotConsumer;
         return start(concurrentTarget, threadNames);
     }

@@ -51,7 +51,7 @@ public class TrafficLightTest {
 		Assert.assertFalse(isBarrierPassed.get());
 		Thread.sleep(10L); // waitGreen() blocking
 		Assert.assertFalse(isBarrierPassed.get());
-		light.setGreen();
+		light.turnGreen();
 		Assert.assertTrue(light.isGreen());
 		Thread.sleep(1L); // wait isBarrierPassed.set(true) to be executed
 		Assert.assertTrue(isBarrierPassed.get());

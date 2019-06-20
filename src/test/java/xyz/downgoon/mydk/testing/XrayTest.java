@@ -32,14 +32,15 @@ public class XrayTest {
 
         public String getData(String key) {
             readCnt.incrementAndGet();
+
             XRAY.dot("S1");
 
             String cachedValue = getDataFromRedis(key);
-            XRAY.dot("S2");
+
 
             if (cachedValue == null) {
 
-
+                XRAY.dot("S2");
                 String refreshedValue = getDataFromMySQL(key);
                 setDataIntoRedis(key, refreshedValue);
             }
@@ -141,9 +142,19 @@ public class XrayTest {
             tds.getData("SN1234");
         }, new String[]{
                 "T1", "T2", "T3"
-        }, (threadName, dotName) -> {
+        }, (isExeced, threadName, dotName) -> {
+
             dotExec.add(threadName + "#" + dotName + "\r\n");
             System.out.println(String.format("[%s#%s] @@ callback", threadName, dotName));
+
+
+//            if (isExeced) {
+//                dotExec.add(threadName + "#" + dotName + "\r\n");
+//                System.out.println(String.format("[%s#%s] @@ callback", threadName, dotName));
+//            } else {
+//                System.out.println(String.format("[%s#%s] @@ skipcode", threadName, dotName));
+//            }
+
 
         }).await((xrayName) -> {
             System.out.println(String.format("FIN: %s", xrayName));
