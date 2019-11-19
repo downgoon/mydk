@@ -18,7 +18,7 @@ public class NonThreadSafeOrderedHash<K, V> implements OrderedHash<K, V> {
     private int count = 0;
 
     @Override
-    public NonThreadSafeOrderedHash add(K key, V value) {
+    public NonThreadSafeOrderedHash<K,V> add(K key, V value) {
         keyIndex.put(key, count);
         orderedValues.add(value);
         count++;

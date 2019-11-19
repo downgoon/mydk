@@ -1,17 +1,22 @@
 package xyz.downgoon.mydk.testing;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import xyz.downgoon.mydk.concurrent.ConcurrentCounter;
 import xyz.downgoon.mydk.concurrent.Counter;
 import xyz.downgoon.mydk.concurrent.LatchTrafficLight;
 import xyz.downgoon.mydk.concurrent.TrafficLight;
 import xyz.downgoon.mydk.util.ImmutableOrderedHash;
-
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.logging.Logger;
 
 /**
  * White-Box Unified Concurrent Testing Framework
@@ -21,6 +26,8 @@ import java.util.logging.Logger;
  */
 
 public class XrayCT implements Xray {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(XrayCT.class);
 
     private String xrayName;
 
@@ -40,12 +47,11 @@ public class XrayCT implements Xray {
     /**
      * threadName -> number of steps which have been finished
      */
-    private final Counter threadFinSteps = new ConcurrentCounter();
+    private volatile Counter threadFinSteps = new ConcurrentCounter();
 
     private volatile TripleConsumer<Boolean, String, String> dotConsumer;
-
-    private Logger LOG = Logger.getLogger(XrayCT.class.getName());
-
+    
+    
     XrayCT(String xrayName) {
         this.xrayName = xrayName;
     }
@@ -58,8 +64,9 @@ public class XrayCT implements Xray {
         }
 
         String dotId = DotUtils.toDotId(dotName);
-        System.out.println(String.format("dotcall %s", dotId));
-
+        LOG.debug("'dot' called at {}", dotId);
+        
+       
         // await green light for previous dot
         AtomicBoolean isHead = new AtomicBoolean();
         TrafficLight preTrafficLight = dotLightsHashInited.getBefore(dotId, isHead);
@@ -73,12 +80,12 @@ public class XrayCT implements Xray {
         }
 
         if (preTrafficLight != null && !isHead.get()) {
-            System.out.println(String.format("[%s] -- await green light: [%s]", dotId, preTrafficLight));
+            LOG.debug("[{}] -- await green light: [{}]", dotId, preTrafficLight);
             try {
                 preTrafficLight.waitGreen();
-                System.out.println(String.format("[%s] -| got green light: [%s]", dotId, preTrafficLight));
+                LOG.debug("[{}] -| got green light: [{}]", dotId, preTrafficLight);;
             } catch (InterruptedException e) {
-                e.printStackTrace();
+            	throw new IllegalStateException("Interrupted", e);
             }
         }
 
@@ -88,6 +95,7 @@ public class XrayCT implements Xray {
         // dot consumer callback
         if (dotConsumer != null) {
             threadFinSteps.increaseAndGet(Thread.currentThread().getName());
+            // called by previous light
             dotConsumer.accept(true, Thread.currentThread().getName(), dotName);
         }
 
@@ -98,10 +106,10 @@ public class XrayCT implements Xray {
             return;
         }
         try {
-            System.out.println(String.format("[%s] || turn green light: [%s]", dotId, currTrafficLight));
+            LOG.debug("[{}] || turn green light: [{}]", dotId, currTrafficLight);
             currTrafficLight.turnGreen();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            throw new IllegalStateException("Interrupted", e);
         }
 
 
@@ -135,7 +143,7 @@ public class XrayCT implements Xray {
      */
     public XrayCT start(Runnable concurrentTarget, String... threadNames) {
         if (dotIds.size() > 0) {
-            System.out.println("dotIds: " + dotIds);
+            LOG.debug("dotIds: {}", dotIds);
             if (dotLightsHashInited != null) {
                 throw new IllegalStateException(String.format("XrayCT [%s] already started", xrayName));
             }
@@ -143,7 +151,7 @@ public class XrayCT implements Xray {
                 dotLightsHashInited = DotUtils.dotLightsHash(dotIds);
             }
 
-            System.out.println(">>>" + this.toString());
+            LOG.debug(">>> {}", this.toString());;
 
         }
 
@@ -151,16 +159,22 @@ public class XrayCT implements Xray {
         for (String threadName : threadNames) {
             Thread thread = new Thread(() -> {
                 try {
-                    readyLatch.await();
+                    // create new threads and wait for 'all-ready'
+                	readyLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    throw new IllegalStateException("Interrupted", e);
                 }
+                
+                // the method 'dot' will be called in 'concurrentTarget.run()'
                 concurrentTarget.run();
+                
                 hookThreadOnClose(Thread.currentThread().getName());
 
             }, threadName);
 
             thread.start();
+            
+            // a newly created thread ready
             readyLatch.countDown();
         }
         return this;
@@ -179,10 +193,11 @@ public class XrayCT implements Xray {
                 if (!light.isGreen()) {
                     try {
                         light.turnGreen();
+                        // called by hook
                         dotConsumer.accept(false, threadName, dotName);
 
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    	throw new IllegalStateException("Interrupted", e);
                     }
                 }
             }
@@ -218,10 +233,24 @@ public class XrayCT implements Xray {
         if (callback != null) {
             callback.accept(xrayName);
         }
+        // for next testing
+        doReset();
     }
 
     public void await() {
         await(null);
+    }
+    
+    
+    protected void doReset() {
+    	dotLightsHashInited = null;
+    	dotIds.clear();
+    	dotNames.clear();
+    	threadFinSteps = new ConcurrentCounter();
+    }
+    
+    public void reset() {
+    	doReset();
     }
 
 

@@ -18,7 +18,7 @@ public class ImmutableOrderedHash<K, V> implements OrderedHash<K, V> {
     }
 
     @Override
-    public NonThreadSafeOrderedHash add(K key, V value) {
+    public NonThreadSafeOrderedHash<K,V> add(K key, V value) {
         throw new IllegalStateException("can't add new elements due to immutable features");
     }
 

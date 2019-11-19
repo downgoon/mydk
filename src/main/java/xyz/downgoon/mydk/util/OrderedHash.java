@@ -3,7 +3,8 @@ package xyz.downgoon.mydk.util;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public interface OrderedHash<K, V> {
-    NonThreadSafeOrderedHash add(K key, V value);
+	
+    NonThreadSafeOrderedHash<K,V> add(K key, V value);
 
     boolean contains(K key);
 

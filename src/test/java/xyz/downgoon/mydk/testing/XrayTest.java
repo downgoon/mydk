@@ -1,22 +1,30 @@
 package xyz.downgoon.mydk.testing;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.Assert;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+// Since JUnit 4.11
+// 单元测试必须串行执行，XRay只能服务于一次并发测试。第二次，需要先Reset。
+@FixMethodOrder(MethodSorters.NAME_ASCENDING) 
 public class XrayTest {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(XrayTest.class);
 
     static class TestingDataStore {
 
-        private ConcurrentHashMap<String, String> redisMap = new ConcurrentHashMap();
+        private ConcurrentHashMap<String, String> redisMap = new ConcurrentHashMap<>();
 
         private AtomicInteger redisHit = new AtomicInteger();
 
@@ -82,117 +90,58 @@ public class XrayTest {
 
     private static XrayCT xrayCT = (XrayCT) Xray.xray(TestingDataStore.class);
 
-//    @Test
-//    public void testSingle() {
-//        TestingDataStore tds = new TestingDataStore();
-//        tds.getData("SN1234");
-//        System.out.println(tds);
-//        tds.getData("SN1234");
-//        System.out.println(tds);
-//        tds.getData("SN1234");
-//        System.out.println(tds);
-//    }
-//
-//
-//    @Test
-//    public void testC2NoSeq() {
-//        TestingDataStore tds = new TestingDataStore();
-//
-//        xrayCT.start(() -> {
-//            tds.getData("SN1234");
-//        }, "T1", "T2", "T3").await((logs) -> {
-//
-//            System.out.println(logs);
-//        });
-//
-//        System.out.println(tds);
-//
-//
-//    }
-//
-//
-//    @Test
-//    public void testC3Seq1() {
-//        TestingDataStore tds = new TestingDataStore();
-//
-//        xrayCT.seq("T1#S1", "T1#S2", "T2#S1", "T2#S2", "T3#S1", "T3#S2");
-//
-//        xrayCT.startAndAwait(() -> {
-//            tds.getData("SN1234");
-//        }, new String[]{
-//                "T1", "T2", "T3"
-//        }, (logs) -> {
-//            System.out.println(tds);
-//            System.out.println(logs);
-//        });
-//    }
-//
     @Test
-    public void testC3Seq2() {
+    public void testC3Seq1() {
         TestingDataStore tds = new TestingDataStore();
 
-        // xrayCT.seq("T1#S1", "T1#S2", "T2#S1", "T2#S2", "T3#S1", "T3#S2");
+        // expected sequence
+        String[] seq = {"T1#S1", "T2#S1", "T3#S1", "T1#S2", "T2#S2", "T3#S2"};
+        xrayCT.seq(seq);
 
-        xrayCT.seq("T1#S1", "T2#S1", "T3#S1", "T1#S2", "T2#S2", "T3#S2");
-
-        // 并发是最终一致性？
-        final List<String> dotExec = Collections.synchronizedList(new ArrayList<>());
+        final List<String> actualSeq = Collections.synchronizedList(new ArrayList<>());
 
         xrayCT.start(() -> {
             tds.getData("SN1234");
         }, new String[]{
                 "T1", "T2", "T3"
         }, (isExeced, threadName, dotName) -> {
-
-            dotExec.add(threadName + "#" + dotName + "\r\n");
-            System.out.println(String.format("[%s#%s] @@ callback", threadName, dotName));
-
-
-//            if (isExeced) {
-//                dotExec.add(threadName + "#" + dotName + "\r\n");
-//                System.out.println(String.format("[%s#%s] @@ callback", threadName, dotName));
-//            } else {
-//                System.out.println(String.format("[%s#%s] @@ skipcode", threadName, dotName));
-//            }
-
+        	// actual sequence
+            actualSeq.add(threadName + "#" + dotName);
 
         }).await((xrayName) -> {
-            System.out.println(String.format("FIN: %s", xrayName));
-            System.out.println(String.format("do exec seq:\r\n %s", dotExec));
+        	LOG.info("actual sequence: {}", actualSeq);
+        	List<String> expectedSeq = Arrays.asList(seq);
+        	LOG.info("expected sequence: {}", expectedSeq);
+        	Assert.assertEquals(expectedSeq, actualSeq);
+        });
+    }
+    
+    
+    @Test
+    public void testC3Seq2() {
+        TestingDataStore tds = new TestingDataStore();
+
+        // expected sequence
+        String[] seq = {"T1#S1", "T1#S2", "T2#S1", "T2#S2", "T3#S1", "T3#S2"};
+        xrayCT.seq(seq);
+
+        final List<String> actualSeq = Collections.synchronizedList(new ArrayList<>());
+
+        xrayCT.start(() -> {
+            tds.getData("SN1234");
+        }, new String[]{
+                "T1", "T2", "T3"
+        }, (isExeced, threadName, dotName) -> {
+        	// actual sequence
+            actualSeq.add(threadName + "#" + dotName);
+
+        }).await((xrayName) -> {
+        	LOG.info("actual sequence: {}", actualSeq);
+        	List<String> expectedSeq = Arrays.asList(seq);
+        	LOG.info("expected sequence: {}", expectedSeq);
+        	Assert.assertEquals(expectedSeq, actualSeq);
         });
     }
 
-//    @Test
-//    public void testC2Seq2() {
-//        TestingDataStore tds = new TestingDataStore();
-//
-//        // xrayCT.seq("T1#S1", "T1#S2", "T2#S1", "T2#S2");
-//        xrayCT.seq("T1#S1", "T2#S1", "T1#S2", "T2#S2");
-//        // xrayCT.seq("T1#S1", "T2#S1", "T2#S2", "T1#S2");
-//
-//        // xrayCT.seq("T2#S1", "T2#S2", "T1#S1", "T1#S2");
-//        // xrayCT.seq("T2#S1", "T1#S1", "T2#S2", "T1#S2");
-//
-//
-//        // xrayCT.seq("T1#S1", "T1#S2");
-//
-//        // 并发是最终一致性？
-//        final List<String> dotExec = Collections.synchronizedList(new ArrayList<>());
-//
-//        xrayCT.start(() -> {
-//            tds.getData("SN1234");
-//        }, new String[]{
-//                "T1", "T2"
-//        }, (threadName, dotName) -> {
-//            dotExec.add(threadName + "#" + dotName + "\r\n");
-//            System.out.println(String.format("@@@ callback: %s#%s", threadName, dotName));
-//
-//        }).await((xrayName) -> {
-//            System.out.println(String.format("FIN: %s", xrayName));
-//            System.out.println(String.format("do exec seq:\r\n %s", dotExec));
-//        });
-//
-//
-//    }
 
 }
