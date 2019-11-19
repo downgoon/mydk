@@ -47,7 +47,7 @@ public class MiniHttpc {
 
 			String resline = sockReader.readLine();
 
-			// parse head
+			// parse headLight
 			int headLineNum = 0;
 			int contentLength = 0;
 			while (!resline.equals("")) { // empty line

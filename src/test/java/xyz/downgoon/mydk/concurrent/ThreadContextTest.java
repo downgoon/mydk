@@ -60,7 +60,7 @@ public class ThreadContextTest {
 			Assert.assertEquals("parent-123", ThreadContext.get("code"));
 			
 			ThreadContext.put("code", "child-456");
-			System.out.println("get in child thread after modify: " + ThreadContext.get("code"));
+			System.out.println("get in child thread afterLight modify: " + ThreadContext.get("code"));
 			Assert.assertEquals("child-456", ThreadContext.get("code"));
 			
 		});
@@ -68,7 +68,7 @@ public class ThreadContextTest {
 		
 		subThread.join();
 		
-		System.out.println("get in parent thread after modify only in child: " + ThreadContext.get("code"));
+		System.out.println("get in parent thread afterLight modify only in child: " + ThreadContext.get("code"));
 		Assert.assertEquals("parent-123", ThreadContext.get("code"));
 		
 		ThreadContext.remove("code");

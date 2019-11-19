@@ -8,8 +8,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import xyz.downgoon.mydk.concurrent.TrafficLight;
-
 public class TrafficLightTest {
 
 	@BeforeClass
@@ -20,14 +18,14 @@ public class TrafficLightTest {
 	public void setUp() throws Exception {
 	}
 
-	protected BooleanSignal createInstance() {
-		return new TrafficLight();
+	protected TrafficLight createInstance() {
+		return new SyncNotifyTrafficLight();
 	}
 	
 	@Test
 	public void testWaitGreen() throws InterruptedException {
 
-		BooleanSignal light = createInstance();
+		TrafficLight light = createInstance();
 		Assert.assertFalse(light.isGreen());
 
 		AtomicBoolean isBarrierPassed = new AtomicBoolean(false);
@@ -53,7 +51,7 @@ public class TrafficLightTest {
 		Assert.assertFalse(isBarrierPassed.get());
 		Thread.sleep(10L); // waitGreen() blocking
 		Assert.assertFalse(isBarrierPassed.get());
-		light.setGreen();
+		light.turnGreen();
 		Assert.assertTrue(light.isGreen());
 		Thread.sleep(1L); // wait isBarrierPassed.set(true) to be executed
 		Assert.assertTrue(isBarrierPassed.get());

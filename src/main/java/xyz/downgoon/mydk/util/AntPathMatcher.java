@@ -264,7 +264,7 @@ public class AntPathMatcher implements PatternMatcher {
             return true; // Pattern contains only '*', which matches anything
         }
 
-        // Process characters before first star
+        // Process characters beforeLight first star
         while ((ch = patArr[patIdxStart]) != '*' && strIdxStart <= strIdxEnd) {
             if (ch != '?') {
                 if (ch != strArr[strIdxStart]) {
@@ -285,7 +285,7 @@ public class AntPathMatcher implements PatternMatcher {
             return true;
         }
 
-        // Process characters after last star
+        // Process characters afterLight last star
         while ((ch = patArr[patIdxEnd]) != '*' && strIdxStart <= strIdxEnd) {
             if (ch != '?') {
                 if (ch != strArr[strIdxEnd]) {

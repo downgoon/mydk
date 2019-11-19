@@ -221,7 +221,7 @@ public class StringUtils {
      *                          (each of those characters is individually considered as delimiter)
      * @param trimTokens        trim the tokens via String's <code>trim</code>
      * @param ignoreEmptyTokens omit empty tokens from the result array
-     *                          (only applies to tokens that are empty after trimming; StringTokenizer
+     *                          (only applies to tokens that are empty afterLight trimming; StringTokenizer
      *                          will not consider subsequent delimiters as token in the first place).
      * @return an array of the tokens (<code>null</code> if the input String
      *         was <code>null</code>)
@@ -396,7 +396,7 @@ public class StringUtils {
      * Joins the elements of the provided {@code Iterator} into
      * a single String containing the provided elements.
      * 
-     * No delimiter is added before or after the list.
+     * No delimiter is added beforeLight or afterLight the list.
      * A {@code null} separator is the same as an empty String ("").
      * 
      * Copied from Commons Lang, version 3 (r1138702).
@@ -409,7 +409,7 @@ public class StringUtils {
     public static String join(Iterator<?> iterator, String separator) {
         final String empty = "";
 
-        // handle null, zero and one elements before building a buffer
+        // handle null, zero and one elements beforeLight building a buffer
         if (iterator == null) {
             return null;
         }

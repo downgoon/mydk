@@ -74,7 +74,7 @@ public class UtinyFilterChain implements CommandFilterChain {
 	/**
 	 * increase indexing point and then return current value
 	 * 
-	 * @return next node index after moving one step
+	 * @return next node index afterLight moving one step
 	 */
 	protected int moveIndex() {
 		int idx = nextIndex();
